@@ -1,3 +1,5 @@
+#Bibliotecas necessárias importadas
+from inserir_aluno import Aluno
 
 #Loop principal do app
 def loop():
@@ -9,7 +11,9 @@ def loop():
         print("3 - Sair \n")
         escolha = input("Opção:  ").strip().lower()
         if escolha == "1":
-            inserir_aluno()
+            inserir_aluno = Aluno("dados.csv")
+            inserir_aluno.solicitarDados()
+            inserir_aluno.salvar()
         elif escolha == "2":
             pesquisar_aluno()
         elif escolha == "3":
