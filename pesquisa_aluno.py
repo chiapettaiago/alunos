@@ -1,0 +1,69 @@
+# folha.py
+import pandas as pd
+import os
+
+def ler_folha(arquivo):
+    if not os.path.isfile(arquivo):
+        print("Nenhum dado encontrado!")
+        return None
+    
+    return pd.read_csv(arquivo, encoding="utf-8")
+
+def buscar_aluno(arquivo, criterio, tipo="nome"):
+    df = ler_folha(arquivo)
+    if df is None:
+        return None
+
+    if tipo == "id":
+        try:
+            criterio = int(criterio)
+            resultado = df[df["ID"] == criterio]
+        except ValueError:
+            print("ID inválido! Digite um número.")
+            return None
+    else:
+        resultado = df[df["Nome"].str.contains(criterio, case=False, na=False)]
+
+    if resultado.empty:
+        print(f"Nenhum aluno encontrado com o {tipo} '{criterio}'.")
+        return None
+    else:
+        print("\n=== RESULTADO DA PESQUISA ===\n")
+        print(resultado.to_string(index=False))
+        print("\n==============================\n")
+        
+        # Retorna o ID do primeiro resultado encontrado
+        return int(resultado.iloc[0]["ID"])
+        
+def editar_aluno(arquivo, id_aluno):
+    df = ler_folha(arquivo)
+    if df is None:
+        return
+    
+    indice = df[df["ID"] == id_aluno].index[0]
+    
+    print("\nDigite os novos dados (deixe em branco para manter o valor atual):\n")
+    
+    campos = ["Nome", "Rua", "Bairro", "Cidade", "UF", "Telefone", "Email"]
+    
+    for campo in campos:
+        novo_valor = input(f"{campo} [{df.loc[indice, campo]}]: ").strip()
+        if novo_valor:
+            df.loc[indice, campo] = novo_valor
+    
+    df.to_csv(arquivo, index=False)
+    print("Aluno editado com sucesso!\n")
+
+def remover_aluno(arquivo, id_aluno):
+    df = ler_folha(arquivo)
+    if df is None:
+        return
+    
+    confirmacao = input(f"Tem certeza que deseja remover o aluno com ID {id_aluno}? (s/n): ").strip().lower()
+    
+    if confirmacao == "s":
+        df = df[df["ID"] != id_aluno]
+        df.to_csv(arquivo, index=False)
+        print("Aluno removido com sucesso!\n")
+    else:
+        print("Operação cancelada.\n")
