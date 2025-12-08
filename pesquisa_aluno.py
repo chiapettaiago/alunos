@@ -7,7 +7,21 @@ def ler_folha(arquivo):
         print("Nenhum dado encontrado!")
         return None
     
-    return pd.read_csv(arquivo, encoding="utf-8")
+    df = pd.read_csv(arquivo, encoding="utf-8")
+    
+    # Garante a coluna ID e preenche NaN com sequência
+    if "ID" not in df.columns:
+        df.insert(0, "ID", range(1, len(df) + 1))
+    else:
+        # Se houver NaN ou não for inteiro, gera IDs sequenciais
+        if df["ID"].isna().any():
+            df["ID"] = pd.Series(range(1, len(df) + 1), dtype="Int64")
+        else:
+            df["ID"] = df["ID"].astype("Int64")
+    
+    # Salva de volta caso tenha sido corrigido
+    df.to_csv(arquivo, index=False)
+    return df
 
 def buscar_aluno(arquivo, criterio, tipo="nome"):
     df = ler_folha(arquivo)
@@ -27,13 +41,25 @@ def buscar_aluno(arquivo, criterio, tipo="nome"):
     if resultado.empty:
         print(f"Nenhum aluno encontrado com o {tipo} '{criterio}'.")
         return None
-    else:
-        print("\n=== RESULTADO DA PESQUISA ===\n")
-        print(resultado.to_string(index=False))
-        print("\n==============================\n")
-        
-        # Retorna o ID do primeiro resultado encontrado
-        return int(resultado.iloc[0]["ID"])
+    
+    print("\n=== RESULTADO DA PESQUISA ===\n")
+    print(resultado.to_string(index=False))
+    print("\n==============================\n")
+    
+    # Se múltiplos, pedir seleção
+    if len(resultado) > 1:
+        id_selecionado = input("Digite o ID do aluno que deseja selecionar: ").strip()
+        try:
+            return int(id_selecionado)
+        except ValueError:
+            print("ID inválido!")
+            return None
+    
+    id_valor = resultado.iloc[0]["ID"]
+    if pd.isna(id_valor):
+        print("Registro sem ID válido.")
+        return None
+    return int(id_valor)
         
 def editar_aluno(arquivo, id_aluno):
     df = ler_folha(arquivo)
